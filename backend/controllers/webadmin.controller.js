@@ -1,5 +1,28 @@
 import { User } from "../models/user.model.js";
 
+
+export const getUserStats = async (req, res) => {
+  try {
+    const studentsCount = await User.countDocuments({ role: "student" });
+    const recruitersCount = await User.countDocuments({ role: "recruiter" });
+
+    return res.status(200).json({
+      success: true,
+      stats: {
+        students: studentsCount,
+        recruiters: recruitersCount,
+      },
+    });
+  } catch (error) {
+    console.error("Dashboard error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};
+
+
 export const getAllUsers = async (req, res) => {
     try {
         const userId = req.id;  // Logged-in user's ID from middleware

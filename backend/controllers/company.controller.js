@@ -145,38 +145,81 @@ export const registerCompany = async (req, res) => {
 //         });
 //     }
 // };
+
 export const getCompany = async (req, res) => {
     try {
-        const userId = req.id;  // Logged-in user's ID from middleware
-        
-        if (!userId) {
-            return res.status(400).json({
-                message: "User ID is required!",
-                success: false,
-            });
-        }
-
-        const companies = await Company.find({ userId }).sort({ createdAt: -1 });
-
-        if (!companies) {
-            return res.status(400).json({
-                message: "No companies found!",
-                success: false,
-            });
-        }
-
-        return res.status(200).json({
-            success: true,
-            companies,  // Send user's companies
+      const userId = req.id; // From auth middleware
+      const role = req.role; // Assuming you also store user role in req.role (e.g., "admin", "student", etc.)
+  
+      if (!userId) {
+        return res.status(400).json({
+          message: "User ID is required!",
+          success: false,
         });
+      }
+  
+      let companies;
+  
+      if (role === "admin") {
+        // ✅ Admin can fetch all companies
+        companies = await Company.find().sort({ createdAt: -1 });
+      } else {
+        // 🔒 Regular users can only fetch their own
+        companies = await Company.find({ userId }).sort({ createdAt: -1 });
+      }
+  
+      if (!companies || companies.length === 0) {
+        return res.status(404).json({
+          message: "No companies found!",
+          success: false,
+        });
+      }
+  
+      return res.status(200).json({
+        success: true,
+        companies,
+      });
     } catch (error) {
-        return res.status(500).json({
-            message: "Internal Server Error",
-            success: false,
-            error: error.message,
-        });
+      return res.status(500).json({
+        message: "Internal Server Error",
+        success: false,
+        error: error.message,
+      });
     }
-};
+  };
+  
+// export const getCompany = async (req, res) => {
+//     try {
+//         const userId = req.id;  // Logged-in user's ID from middleware
+        
+//         if (!userId) {
+//             return res.status(400).json({
+//                 message: "User ID is required!",
+//                 success: false,
+//             });
+//         }
+
+//         const companies = await Company.find({ userId }).sort({ createdAt: -1 });
+
+//         if (!companies) {
+//             return res.status(400).json({
+//                 message: "No companies found!",
+//                 success: false,
+//             });
+//         }
+
+//         return res.status(200).json({
+//             success: true,
+//             companies,  // Send user's companies
+//         });
+//     } catch (error) {
+//         return res.status(500).json({
+//             message: "Internal Server Error",
+//             success: false,
+//             error: error.message,
+//         });
+//     }
+// };
 
 
 

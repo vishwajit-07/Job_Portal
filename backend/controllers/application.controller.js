@@ -51,31 +51,82 @@ export const applyJob = async (req,res) =>{
         console.log(error);
     }
 };
-export const getAppliedJobs = async (req,res) =>{
+
+export const getAppliedJobs = async (req, res) => {
     try {
-        const userId = req.id;
-        const application = await Application.find({applicant:userId}).sort({createdAt:-1}).populate({
-            path:"job",
-            options:{sort:{createdAt:-1}},
-            populate:{
-                path:"company",
-                options:{sort:{createdAt:-1}}
-            }
+      const userId = req.id;
+      const userRole = req.role;
+  
+      let application;
+  
+      if (userRole === "admin") {
+        // ✅ Admin: fetch all applications
+        application = await Application.find({})
+          .sort({ createdAt: -1 })
+          .populate({
+            path: "job",
+            populate: {
+              path: "company",
+            },
+          });
+      } else {
+        // ✅ Student/Recruiter: fetch their applications only
+        application = await Application.find({ applicant: userId })
+          .sort({ createdAt: -1 })
+          .populate({
+            path: "job",
+            populate: {
+              path: "company",
+            },
+          });
+      }
+  
+      if (!application || application.length === 0) {
+        return res.status(404).json({
+          message: "No Applications found!",
+          success: false,
         });
-        if(!application){
-            return res.status(404).json({
-                message: "No Applications found!",
-                success:false
-            });
-        }
-        return res.status(200).json({
-            application,
-            success:true
-        });
+      }
+  
+      return res.status(200).json({
+        application,
+        success: true,
+      });
     } catch (error) {
-        console.log(error);
+      console.log("Error fetching applied jobs:", error.message);
+      return res.status(500).json({
+        message: "Internal Server Error",
+        success: false,
+        error: error.message,
+      });
     }
-}
+  };
+  
+// export const getAppliedJobs = async (req,res) =>{
+//     try {
+//         const userId = req.id;
+//         const application = await Application.find({applicant:userId}).sort({createdAt:-1}).populate({
+//             path:"job",
+//             options:{sort:{createdAt:-1}},
+//             populate:{
+//                 path:"company",
+//                 options:{sort:{createdAt:-1}}
+//             }
+//         });
+//         if(!application){
+//             return res.status(404).json({
+//                 message: "No Applications found!",
+//                 success:false
+//             });
+//         }
+//         return res.status(200).json({
+//             application,
+//             success:true
+//         });
+//     } catch (error) {
+//         console.log(error);
+//     }
+// }
 
 // export const getAppliedJobs = async (req, res) => {
 //     try {

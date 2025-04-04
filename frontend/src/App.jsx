@@ -17,6 +17,7 @@ import Applicants from './components/admin/Applicants.jsx'
 import ProtectedRoute from './components/admin/ProtectedRoute.jsx'
 import AllUsers from './components/webadmin/allUsers.jsx';
 import AllRecruiters from './components/webadmin/allRecruiters.jsx'
+import Dashboard from './components/webadmin/Dashboard.jsx'
 const appRouter = createBrowserRouter([
   {
     path: "/",
@@ -51,6 +52,7 @@ const appRouter = createBrowserRouter([
     element: <Profile />
   },
   // Admin 
+
   {
     path: "/admin/companies",
     element: <ProtectedRoute><Companies /></ProtectedRoute>
@@ -76,6 +78,10 @@ const appRouter = createBrowserRouter([
     element: <ProtectedRoute><Applicants /></ProtectedRoute>
   },
   //webAdmin route
+  {
+    path: "/dashboard",
+    element: <Dashboard />
+  },
   {
     path: "/allUsers",
     element: <AllUsers />

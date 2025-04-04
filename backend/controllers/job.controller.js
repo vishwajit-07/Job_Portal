@@ -188,48 +188,104 @@ export const saveJob = async (req, res) => {
 
 
 // Get all saved jobs for a user
-
 export const getSavedJobs = async (req, res) => {
     try {
-        // ✅ Ensure the user is authenticated
-        const userId = req.id;
-        if (!userId) {
-            return res.status(401).json({
-                message: "Please log in to view saved jobs",
-                success: false
-            });
-        }
-
-        // ✅ Fetch saved jobs for the logged-in user, sorted by createdAt (latest first)
-        const savedJobs = await SavedJob.find({ user: userId }).sort({ createdAt: -1 }).populate({
-                path: "job",
-                options: { sort: { createdAt: -1 } },
-                populate: {
-                    path: "company",
-                    options: { sort: { createdAt: -1 } }
-                }
-            });
-
-        if(!savedJobs){
-            return res.status(404).json({
-                message: "No saved jobs found!",
-                success: false
-            });
-        }
-
-        return res.status(200).json({
-            savedJobs,
-            success: true
+      const userId = req.id;
+      const userRole = req.role;
+  
+      if (!userId) {
+        return res.status(401).json({
+          message: "Please log in to view saved jobs",
+          success: false,
         });
+      }
+  
+      let savedJobs;
+  
+      // ✅ If admin, fetch all saved jobs
+      if (userRole === "admin") {
+        savedJobs = await SavedJob.find({})
+          .sort({ createdAt: -1 })
+          .populate({
+            path: "job",
+            populate: {
+              path: "company",
+            },
+          });
+      } else {
+        // ✅ If student/recruiter, fetch only their saved jobs
+        savedJobs = await SavedJob.find({ user: userId })
+          .sort({ createdAt: -1 })
+          .populate({
+            path: "job",
+            populate: {
+              path: "company",
+            },
+          });
+      }
+  
+      if (!savedJobs || savedJobs.length === 0) {
+        return res.status(404).json({
+          message: "No saved jobs found!",
+          success: false,
+        });
+      }
+  
+      return res.status(200).json({
+        savedJobs,
+        success: true,
+      });
     } catch (error) {
-        console.error("Error fetching saved jobs:", error.message);
-        return res.status(500).json({
-            message: "Internal Server Error",
-            success: false,
-            error: error.message
-        });
+      console.error("Error fetching saved jobs:", error.message);
+      return res.status(500).json({
+        message: "Internal Server Error",
+        success: false,
+        error: error.message,
+      });
     }
-};
+  };
+  
+// export const getSavedJobs = async (req, res) => {
+//     try {
+//         // ✅ Ensure the user is authenticated
+//         const userId = req.id;
+//         if (!userId) {
+//             return res.status(401).json({
+//                 message: "Please log in to view saved jobs",
+//                 success: false
+//             });
+//         }
+
+//         // ✅ Fetch saved jobs for the logged-in user, sorted by createdAt (latest first)
+//         const savedJobs = await SavedJob.find({ user: userId }).sort({ createdAt: -1 }).populate({
+//                 path: "job",
+//                 options: { sort: { createdAt: -1 } },
+//                 populate: {
+//                     path: "company",
+//                     options: { sort: { createdAt: -1 } }
+//                 }
+//             });
+
+//         if(!savedJobs){
+//             return res.status(404).json({
+//                 message: "No saved jobs found!",
+//                 success: false
+//             });
+//         }
+
+//         return res.status(200).json({
+//             savedJobs,
+//             success: true
+//         });
+//     } catch (error) {
+//         console.error("Error fetching saved jobs:", error.message);
+//         return res.status(500).json({
+//             message: "Internal Server Error",
+//             success: false,
+//             error: error.message
+//         });
+//     }
+// };
 
 
 

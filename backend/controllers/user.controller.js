@@ -251,7 +251,7 @@ export const login = async (req, res) => {
         );
 
         const roleRedirects = {
-            admin: '/allUsers',
+            admin: '/dashboard',
             recruiter: '/admin/companies',
             student: '/'
         };

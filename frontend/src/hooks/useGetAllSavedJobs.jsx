@@ -33,6 +33,7 @@ const useGetAllSavedJobs = () => {
         const res = await axios.get(`${JOB_API_END_POINT}/saved-jobs`, { withCredentials: true });
         if (res.data.success) {
           dispatch(setSavedJobs(res.data.savedJobs));
+          console.log(res.data.savedJobs);
         }
       } catch (error) {
         console.error("Error fetching saved jobs:", error);

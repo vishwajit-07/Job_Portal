@@ -49,6 +49,7 @@ function Navbar() {
                                 </>
                             ) : user && user.role === 'admin' ? (
                                 <>
+                                    <li><Link className='hover:text-[#7209B7]' to={'/dashboard'}>Dashboard</Link></li>
                                     <li><Link className='hover:text-[#7209B7]' to={'/allUsers'}>All Users</Link></li>
                                     <li><Link className='hover:text-[#7209B7]' to={'/allRecruiters'}>All Recruiters</Link></li>
                                 </>
