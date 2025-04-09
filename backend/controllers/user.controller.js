@@ -3,44 +3,44 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import getDataUri from '../utils/dataURI.js';
 import cloudinary from '../utils/cloudinary.js';
-export const register = async (req, res) => {
-    try {
-        const { fullname, email, phoneNumber, role, password } = req.body;
-        if (!fullname || !email || !phoneNumber || !role || !password) {
-            return res.status(404).json({
-                message: "Somthing is missing",
-                success: false
-            });
-        };
-        const file = req.file;
-        const fileURI = getDataUri(file);
-        const cloudResponse = await cloudinary.uploader.upload(fileURI.content);
-        const user = await User.findOne({ email });
-        if (user) {
-            return res.status(200).json({
-                message: "User with this email id already exists",
-                success: false
-            });
-        }
-        const hashedPassword = await bcrypt.hash(password, 10);
-        await User.create({
-            fullname,
-            email,
-            phoneNumber,
-            password: hashedPassword,
-            role,
-            profile:{
-                profilePhoto: cloudResponse.secure_url,
-            }
-        });
-        return res.status(201).json({
-            message: "Account is created successfully!",
-            success: true
-        })
-    } catch (error) {
-        console.log(error);
-    }
-}
+// export const register = async (req, res) => {
+//     try {
+//         const { fullname, email, phoneNumber, role, password } = req.body;
+//         if (!fullname || !email || !phoneNumber || !role || !password) {
+//             return res.status(404).json({
+//                 message: "Somthing is missing",
+//                 success: false
+//             });
+//         };
+//         const file = req.file;
+//         const fileURI = getDataUri(file);
+//         const cloudResponse = await cloudinary.uploader.upload(fileURI.content);
+//         const user = await User.findOne({ email });
+//         if (user) {
+//             return res.status(200).json({
+//                 message: "User with this email id already exists",
+//                 success: false
+//             });
+//         }
+//         const hashedPassword = await bcrypt.hash(password, 10);
+//         await User.create({
+//             fullname,
+//             email,
+//             phoneNumber,
+//             password: hashedPassword,
+//             role,
+//             profile:{
+//                 profilePhoto: cloudResponse.secure_url,
+//             }
+//         });
+//         return res.status(201).json({
+//             message: "Account is created successfully!",
+//             success: true
+//         })
+//     } catch (error) {
+//         console.log(error);
+//     }
+// }
 
 // export const login = async (req, res) => {
 //     try {
@@ -201,6 +201,98 @@ export const register = async (req, res) => {
 //         });
 //     }
 // };
+
+
+
+export const register = async (req, res) => {
+    try {
+        const { fullname, email, phoneNumber, role, password } = req.body;
+        const file = req.file;
+
+        // Check for missing fields
+        if (!fullname || !email || !phoneNumber || !role || !password || !file) {
+            return res.status(400).json({
+                message: "All fields are required, including profile photo.",
+                success: false
+            });
+        }
+
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({
+                message: "Invalid email format.",
+                success: false
+            });
+        }
+
+        // Validate phone number (basic: must be digits and 10 characters)
+        const phoneRegex = /^[0-9]{10}$/;
+        if (!phoneRegex.test(phoneNumber)) {
+            return res.status(400).json({
+                message: "Invalid phone number. It should be 10 digits.",
+                success: false
+            });
+        }
+
+        // Validate password length
+        if (password.length < 6) {
+            return res.status(400).json({
+                message: "Password should be at least 6 characters long.",
+                success: false
+            });
+        }
+
+        // Validate role
+        const allowedRoles = ['student', 'recruiter'];
+        if (!allowedRoles.includes(role)) {
+            return res.status(400).json({
+                message: "Role must be either 'student' or 'recruiter'.",
+                success: false
+            });
+        }
+
+        // Check if user already exists
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            return res.status(409).json({
+                message: "User with this email already exists.",
+                success: false
+            });
+        }
+
+        // Upload image to Cloudinary
+        const fileURI = getDataUri(file);
+        const cloudResponse = await cloudinary.uploader.upload(fileURI.content);
+
+        // Hash the password
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Create new user
+        await User.create({
+            fullname,
+            email,
+            phoneNumber,
+            password: hashedPassword,
+            role,
+            profile: {
+                profilePhoto: cloudResponse.secure_url
+            }
+        });
+
+        return res.status(201).json({
+            message: "Account created successfully!",
+            success: true
+        });
+
+    } catch (error) {
+        console.error("Register Error:", error);
+        return res.status(500).json({
+            message: "Something went wrong. Please try again later.",
+            success: false
+        });
+    }
+};
 
 export const login = async (req, res) => {
     try {
